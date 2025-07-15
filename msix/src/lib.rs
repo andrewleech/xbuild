@@ -54,7 +54,7 @@ use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{BufReader, Cursor, Read, Seek};
 use std::path::{Path, PathBuf};
-use xcommon::{Scaler, ScalerOptsBuilder, Signer, Zip, ZipFileOptions, ZipInfo};
+use xcommon::{Scaler, ScalerOptsBuilder, Zip, ZipInfo};
 use zip::ZipArchive;
 
 mod block_map;
@@ -66,7 +66,7 @@ mod pkcs7;
 
 pub use crate::builder::{msix, MsixBuilder};
 pub use crate::manifest::AppxManifest;
-pub use xcommon::{ZipFileOptions, Signer};
+pub use xcommon::{Signer, ZipFileOptions};
 
 const DEBUG_PEM: &str = include_str!("../assets/debug.pem");
 
@@ -113,13 +113,13 @@ impl Msix {
                 scaler.write(&mut Cursor::new(&mut buf), opts)?;
                 let name = format!("{}.scale-{}.png", base_name, (scale * 100.0) as u32);
                 self.zip
-                    .create_file(&images.join(name), ZipFileOptions::Unaligned, &buf)?;
+                    .create_file(&images.join(name), xcommon::ZipFileOptions::Unaligned, &buf)?;
             }
         }
         Ok(())
     }
 
-    pub fn add_file(&mut self, source: &Path, dest: &Path, opts: ZipFileOptions) -> Result<()> {
+    pub fn add_file(&mut self, source: &Path, dest: &Path, opts: xcommon::ZipFileOptions) -> Result<()> {
         self.zip.add_file(source, dest, opts)
     }
 
@@ -127,25 +127,25 @@ impl Msix {
         &mut self,
         source: &Path,
         dest: &Path,
-        opts: ZipFileOptions,
+        opts: xcommon::ZipFileOptions,
     ) -> Result<()> {
         self.zip.add_directory(source, dest, opts)
     }
 
-    pub fn finish(mut self, signer: Option<Signer>) -> Result<()> {
+    pub fn finish(mut self, signer: Option<xcommon::Signer>) -> Result<()> {
         self.zip.create_file(
             "AppxManifest.xml".as_ref(),
-            ZipFileOptions::Compressed,
+            xcommon::ZipFileOptions::Compressed,
             &to_xml(&self.manifest, true),
         )?;
         self.zip.finish()?;
         Self::sign(&self.path, signer, self.compress)
     }
 
-    pub fn sign(path: &Path, signer: Option<Signer>, compress: bool) -> Result<()> {
+    pub fn sign(path: &Path, signer: Option<xcommon::Signer>, compress: bool) -> Result<()> {
         let signer = signer
             .map(Ok)
-            .unwrap_or_else(|| Signer::new(DEBUG_PEM))
+            .unwrap_or_else(|| xcommon::Signer::new(DEBUG_PEM))
             .unwrap();
 
         // add content types and block map
@@ -164,12 +164,12 @@ impl Msix {
         let mut zip = Zip::append(path, compress)?;
         zip.create_file(
             "[Content_Types].xml".as_ref(),
-            ZipFileOptions::Compressed,
+            xcommon::ZipFileOptions::Compressed,
             &content_types,
         )?;
         zip.create_file(
             "AppxBlockMap.xml".as_ref(),
-            ZipFileOptions::Compressed,
+            xcommon::ZipFileOptions::Compressed,
             &block_map,
         )?;
         zip.finish()?;
@@ -198,7 +198,7 @@ impl Msix {
         let mut zip = Zip::append(path, compress)?;
         zip.create_file(
             "AppxSignature.p7x".as_ref(),
-            ZipFileOptions::Compressed,
+            xcommon::ZipFileOptions::Compressed,
             &sig,
         )?;
         zip.finish()?;

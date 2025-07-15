@@ -1,7 +1,7 @@
 use crate::{manifest::*, Msix};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
-use xcommon::{Signer, ZipFileOptions};
+use xcommon;
 
 /// Builder for creating MSIX packages with an ergonomic API
 pub struct MsixBuilder {
@@ -10,9 +10,9 @@ pub struct MsixBuilder {
     compress: bool,
     icon_path: Option<PathBuf>,
     executable_path: Option<PathBuf>,
-    assets: Vec<(PathBuf, PathBuf, ZipFileOptions)>,
-    directories: Vec<(PathBuf, PathBuf, ZipFileOptions)>,
-    signer: Option<Signer>,
+    assets: Vec<(PathBuf, PathBuf, xcommon::ZipFileOptions)>,
+    directories: Vec<(PathBuf, PathBuf, xcommon::ZipFileOptions)>,
+    signer: Option<xcommon::Signer>,
 }
 
 impl MsixBuilder {
@@ -120,7 +120,7 @@ impl MsixBuilder {
         mut self,
         source: P,
         dest: Q,
-        opts: ZipFileOptions,
+        opts: xcommon::ZipFileOptions,
     ) -> Self {
         self.assets.push((
             source.as_ref().to_path_buf(),
@@ -135,7 +135,7 @@ impl MsixBuilder {
         mut self,
         source: P,
         dest: Q,
-        opts: ZipFileOptions,
+        opts: xcommon::ZipFileOptions,
     ) -> Self {
         self.directories.push((
             source.as_ref().to_path_buf(),
@@ -152,7 +152,7 @@ impl MsixBuilder {
     }
 
     /// Set a custom signer (defaults to debug signer)
-    pub fn signer(mut self, signer: Signer) -> Self {
+    pub fn signer(mut self, signer: xcommon::Signer) -> Self {
         self.signer = Some(signer);
         self
     }
@@ -172,7 +172,7 @@ impl MsixBuilder {
             let exe_name = exe_path
                 .file_name()
                 .ok_or_else(|| anyhow::anyhow!("Invalid executable path"))?;
-            msix.add_file(exe_path, exe_name.as_ref(), ZipFileOptions::Compressed)?;
+            msix.add_file(exe_path, exe_name.as_ref(), xcommon::ZipFileOptions::Compressed)?;
         }
 
         // Add all files
