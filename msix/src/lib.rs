@@ -66,6 +66,7 @@ mod pkcs7;
 
 pub use crate::builder::{msix, MsixBuilder};
 pub use crate::manifest::AppxManifest;
+pub use xcommon::ZipFileOptions;
 
 const DEBUG_PEM: &str = include_str!("../assets/debug.pem");
 
