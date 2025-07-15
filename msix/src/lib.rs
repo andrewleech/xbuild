@@ -1,3 +1,50 @@
+//! # MSIX Package Builder
+//!
+//! This crate provides functionality for creating and signing MSIX packages for Windows applications.
+//! 
+//! ## Quick Start
+//!
+//! The easiest way to create an MSIX package is using the builder pattern:
+//!
+//! ```rust,no_run
+//! use msix::msix;
+//! 
+//! let package_path = msix("output.msix")
+//!     .identity("com.example.myapp", "1.0.0.0", "CN=Example Corp")
+//!     .properties("My Application", "A sample application")
+//!     .application("MyApp", "myapp.exe", "My Application", "A sample application")
+//!     .capabilities(vec!["internetClient", "runFullTrust"])
+//!     .default_target_device_family()
+//!     .default_resource()
+//!     .icon("icon.png")
+//!     .executable("myapp.exe")
+//!     .build()?;
+//! # Ok::<(), anyhow::Error>(())
+//! ```
+//!
+//! ## Features
+//!
+//! - **Complete MSIX Support**: Generate properly structured MSIX packages
+//! - **Automatic Icon Scaling**: Convert a single icon to all required Windows app icon sizes
+//! - **Code Signing**: Built-in support for signing packages with certificates
+//! - **Manifest Generation**: Type-safe AppxManifest.xml generation with serde
+//! - **Builder Pattern**: Ergonomic API for package creation
+//!
+//! ## Low-Level API
+//!
+//! For more control, you can use the low-level `Msix` struct directly:
+//!
+//! ```rust,no_run
+//! use msix::{Msix, AppxManifest};
+//! use std::path::PathBuf;
+//!
+//! let manifest = AppxManifest::default();
+//! let mut msix = Msix::new(PathBuf::from("output.msix"), manifest, true)?;
+//! msix.add_icon("icon.png")?;
+//! msix.finish(None)?;
+//! # Ok::<(), anyhow::Error>(())
+//! ```
+
 use crate::block_map::BlockMapBuilder;
 use crate::content_types::ContentTypesBuilder;
 use crate::p7x::Digests;
@@ -11,11 +58,13 @@ use xcommon::{Scaler, ScalerOptsBuilder, Signer, Zip, ZipFileOptions, ZipInfo};
 use zip::ZipArchive;
 
 mod block_map;
+pub mod builder;
 mod content_types;
 pub mod manifest;
 pub mod p7x;
 mod pkcs7;
 
+pub use crate::builder::{msix, MsixBuilder};
 pub use crate::manifest::AppxManifest;
 
 const DEBUG_PEM: &str = include_str!("../assets/debug.pem");
