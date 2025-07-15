@@ -36,11 +36,11 @@
 //!
 //! ```rust,no_run
 //! use msix::{Msix, AppxManifest};
-//! use std::path::PathBuf;
+//! use std::path::{Path, PathBuf};
 //!
 //! let manifest = AppxManifest::default();
 //! let mut msix = Msix::new(PathBuf::from("output.msix"), manifest, true)?;
-//! msix.add_icon("icon.png")?;
+//! msix.add_icon(Path::new("icon.png"))?;
 //! msix.finish(None)?;
 //! # Ok::<(), anyhow::Error>(())
 //! ```
